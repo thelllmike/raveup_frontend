@@ -1,68 +1,12 @@
-import { useState } from "react";
-
-// Mock data for races
-const initialRaces = [
-  {
-    id: "R-101",
-    name: "COLOMBO STREET RACE",
-    date: "AUG 8, 2025",
-    location: "COLOMBO CITY",
-    category: "1000CC",
-    registrations: 120,
-    status: "UPCOMING",
-    maxParticipants: 120,
-    participants: [
-      {
-        name: "DILAN FERNANDO",
-        category: "1000CC",
-        team: "APEX RACING",
-        status: "APPROVED",
-      },
-      {
-        name: "SHEHAN PERERA",
-        category: "1000CC",
-        team: "SPEED HUNTERS",
-        status: "PENDING",
-      },
-    ],
-  },
-  {
-    id: "R-102",
-    name: "KATUKURUNDA SPRINT",
-    date: "AUG 9, 2025",
-    location: "KATUKURUNDA",
-    category: "600CC",
-    registrations: 98,
-    status: "ONGOING",
-    maxParticipants: 100,
-  },
-  {
-    id: "R-103",
-    name: "SIGIRIYA RALLY",
-    date: "AUG 10, 2025",
-    location: "SIGIRIYA TRACK",
-    category: "ENDURANCE",
-    registrations: 87,
-    status: "SCHEDULED",
-    maxParticipants: 120,
-  },
-  {
-    id: "R-100",
-    name: "PANNALA GRAND PRIX",
-    date: "JUL 1, 2025",
-    location: "PANNALA CIRCUIT",
-    category: "1000CC",
-    registrations: 150,
-    status: "COMPLETED",
-    maxParticipants: 150,
-  },
-];
+// src/RaceManagement.jsx
+import { useState, useEffect } from "react";
+import ApiService from "../ApiService";
 
 // Categories for dropdown
 const categories = ["1000CC", "600CC", "ENDURANCE", "RALLY", "SPRINT"];
 
 export default function RaceManagement() {
-  const [races, setRaces] = useState(initialRaces);
+  const [races, setRaces] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
   const [selectedRace, setSelectedRace] = useState(null);
   const [newRace, setNewRace] = useState({
@@ -72,36 +16,55 @@ export default function RaceManagement() {
     category: "",
     maxParticipants: "",
   });
-  const [activeTab, setActiveTab] = useState("RACE");
+
+  // Fetch all races on mount
+  useEffect(() => {
+    loadRaces();
+  }, []);
+
+  const loadRaces = async () => {
+    try {
+      const data = await ApiService.getAllRaces();
+      // Map API response to UI shape
+      const formatted = data.map((r) => ({
+        id: r.id,
+        name: r.race_name,
+        date: r.date,
+        location: r.location,
+        category: r.category,
+        registrations: r.registrations || 0,
+        status: r.status || "UPCOMING",
+        maxParticipants: r.max_participants,
+        participants: r.participants || [],
+      }));
+      setRaces(formatted);
+    } catch (err) {
+      console.error("Failed to load races:", err);
+    }
+  };
 
   // Handle creating a new race
-  const handleCreateRace = () => {
-    const raceId = `R-${100 + races.length + 1}`;
-    const createdRace = {
-      ...newRace,
-      id: raceId,
-      status: "UPCOMING",
-      registrations: 0,
-    };
-
-    setRaces([...races, createdRace]);
-    setActiveModal(null);
-    setNewRace({
-      name: "",
-      location: "",
-      date: "",
-      category: "",
-      maxParticipants: "",
-    });
+  const handleCreateRace = async () => {
+    try {
+      await ApiService.createRace({
+        race_name: newRace.name,
+        location: newRace.location,
+        date: newRace.date,
+        category: newRace.category,
+        max_participants: parseInt(newRace.maxParticipants, 10),
+      });
+      setActiveModal(null);
+      setNewRace({ name: "", location: "", date: "", category: "", maxParticipants: "" });
+      loadRaces();
+    } catch (err) {
+      console.error("Failed to create race:", err);
+    }
   };
 
   // Handle input changes for new race form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewRace({
-      ...newRace,
-      [name]: value,
-    });
+    setNewRace((prev) => ({ ...prev, [name]: value }));
   };
 
   // Handle viewing race details
@@ -111,34 +74,25 @@ export default function RaceManagement() {
   };
 
   // Handle approving a participant
-  const handleApproveParticipant = (racerId) => {
-    if (selectedRace) {
-      const updatedParticipants = selectedRace.participants.map((participant) =>
-        participant.name === racerId
-          ? { ...participant, status: "APPROVED" }
-          : participant
-      );
-
-      const updatedRace = {
-        ...selectedRace,
-        participants: updatedParticipants,
-      };
-      setSelectedRace(updatedRace);
-
-      const updatedRaces = races.map((race) =>
-        race.id === selectedRace.id ? updatedRace : race
-      );
-
-      setRaces(updatedRaces);
-    }
+  const handleApproveParticipant = (racerName) => {
+    if (!selectedRace) return;
+    const updatedParticipants = selectedRace.participants.map((p) =>
+      p.name === racerName ? { ...p, status: "APPROVED" } : p
+    );
+    const updatedRace = { ...selectedRace, participants: updatedParticipants };
+    setSelectedRace(updatedRace);
+    setRaces((prev) =>
+      prev.map((r) => (r.id === updatedRace.id ? updatedRace : r))
+    );
   };
 
   // Handle closing a race
   const handleCloseRace = (raceId) => {
-    const updatedRaces = races.map((race) =>
-      race.id === raceId ? { ...race, status: "COMPLETED" } : race
+    setRaces((prev) =>
+      prev.map((r) =>
+        r.id === raceId ? { ...r, status: "COMPLETED" } : r
+      )
     );
-    setRaces(updatedRaces);
   };
 
   return (
@@ -155,50 +109,22 @@ export default function RaceManagement() {
                 className="w-full pl-4 pr-10 py-3 bg-gray-100 rounded-lg border-none focus:ring-2 focus:ring-red-500"
               />
               <button className="absolute right-0 top-0 h-full px-4 text-white bg-red-600 rounded-r-lg">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                    clipRule="evenodd"
-                  />
+                {/* search icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                 </svg>
               </button>
             </div>
             <button className="p-3 border rounded-lg">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
+              {/* calendar icon */}
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </button>
             <button className="p-3 border rounded-lg">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
+              {/* menu icon */}
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
           </div>
@@ -215,17 +141,9 @@ export default function RaceManagement() {
             className="bg-red-600 text-white px-6 py-3 rounded-full flex items-center"
             onClick={() => setActiveModal("CREATE_RACE")}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                clipRule="evenodd"
-              />
+            {/* plus icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
             </svg>
             CREATE NEW RACE
           </button>
@@ -234,29 +152,22 @@ export default function RaceManagement() {
         {/* Race Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {races.map((race) => (
-            <div
-              key={race.id}
-              className="bg-white rounded-lg shadow overflow-hidden p-2"
-            >
+            <div key={race.id} className="bg-white rounded-lg shadow overflow-hidden p-2">
               {/* Status Bar */}
-              <div
-                className={`w-full py-2 text-center rounded-t-lg border-1 ${
+              <div className={`w-full py-2 text-center rounded-t-lg border-1 ${
+                race.status === "COMPLETED"
+                  ? "border-green-500"
+                  : race.status === "ONGOING"
+                  ? "border-yellow-500"
+                  : "border-blue-500"
+              } text-white`}>
+                <span className={`font-medium ${
                   race.status === "COMPLETED"
-                    ? "border-green-500"
+                    ? "text-green-400"
                     : race.status === "ONGOING"
-                    ? "border-yellow-500"
-                    : "border-blue-500"
-                } text-white`}
-              >
-                <span
-                  className={`font-medium ${
-                    race.status === "COMPLETED"
-                      ? "text-green-400"
-                      : race.status === "ONGOING"
-                      ? "text-yellow-400"
-                      : "text-blue-400"
-                  }`}
-                >
+                    ? "text-yellow-400"
+                    : "text-blue-400"
+                }`}>
                   {race.status === "COMPLETED"
                     ? "● COMPLETED"
                     : race.status === "ONGOING"
@@ -287,7 +198,7 @@ export default function RaceManagement() {
                   </div>
                   <div>
                     <p className="text-gray-600 text-sm">REGISTRATIONS</p>
-                    <p className="font-bold">{race.registrations}</p>
+                    <p className="font-bold">{race.maxParticipants}</p>
                   </div>
                 </div>
 
@@ -325,27 +236,14 @@ export default function RaceManagement() {
 
       {/* Race Details Modal */}
       {activeModal === "RACE_DETAILS" && selectedRace && (
-        <div className="fixed inset-0 bg-black/20  flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-4 border-b">
               <h3 className="text-xl font-bold">RACE DETAILS</h3>
-              <button
-                className="text-gray-500 hover:text-gray-700"
-                onClick={() => setActiveModal(null)}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+              <button className="text-gray-500 hover:text-gray-700" onClick={() => setActiveModal(null)}>
+                {/* close icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
@@ -388,46 +286,40 @@ export default function RaceManagement() {
                     </tr>
                   </thead>
                   <tbody>
-                    {selectedRace.participants &&
-                      selectedRace.participants.map((participant, index) => (
-                        <tr key={index} className="border-t">
-                          <td className="py-3 px-4">{participant.name}</td>
-                          <td className="py-3 px-4">{participant.category}</td>
-                          <td className="py-3 px-4">{participant.team}</td>
-                          <td className="py-3 px-4">
-                            <span
-                              className={`inline-block px-3 py-1 rounded-full text-sm ${
-                                participant.status === "APPROVED"
-                                  ? "bg-green-100 text-green-600"
-                                  : "bg-yellow-100 text-yellow-600"
-                              }`}
+                    {selectedRace.participants.map((participant, i) => (
+                      <tr key={i} className="border-t">
+                        <td className="py-3 px-4">{participant.name}</td>
+                        <td className="py-3 px-4">{participant.category}</td>
+                        <td className="py-3 px-4">{participant.team}</td>
+                        <td className="py-3 px-4">
+                          <span className={`inline-block px-3 py-1 rounded-full text-sm ${
+                            participant.status === "APPROVED"
+                              ? "bg-green-100 text-green-600"
+                              : "bg-yellow-100 text-yellow-600"
+                          }`}>
+                            {participant.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          {participant.status === "APPROVED" ? (
+                            <button className="bg-red-600 text-white px-4 py-2 rounded-full">
+                              VIEW PROFILE
+                            </button>
+                          ) : (
+                            <button
+                              className="bg-red-600 text-white px-4 py-2 rounded-full"
+                              onClick={() => handleApproveParticipant(participant.name)}
                             >
-                              {participant.status}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            {participant.status === "APPROVED" ? (
-                              <button className="bg-red-600 text-white px-4 py-2 rounded-full">
-                                VIEW PROFILE
-                              </button>
-                            ) : (
-                              <button
-                                className="bg-red-600 text-white px-4 py-2 rounded-full"
-                                onClick={() =>
-                                  handleApproveParticipant(participant.name)
-                                }
-                              >
-                                APPROVE
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
+                              APPROVE
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
 
-              {/* Edit Button */}
               <div className="flex justify-end mt-6">
                 <button className="bg-red-600 text-white px-6 py-2 rounded-full">
                   EDIT
@@ -440,27 +332,14 @@ export default function RaceManagement() {
 
       {/* Create Race Modal */}
       {activeModal === "CREATE_RACE" && (
-        <div className="fixed inset-0 bg-black/20  flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
             <div className="flex justify-between items-center p-4 border-b">
               <h3 className="text-xl font-bold">CREATE NEW RACE</h3>
-              <button
-                className="text-gray-500 hover:text-gray-700"
-                onClick={() => setActiveModal(null)}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+              <button className="text-gray-500 hover:text-gray-700" onClick={() => setActiveModal(null)}>
+                {/* close icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
@@ -491,29 +370,12 @@ export default function RaceManagement() {
 
                 <div className="relative">
                   <input
-                    type="text"
+                    type="date"
                     name="date"
-                    placeholder="DATE"
                     className="w-full p-3 bg-gray-100 rounded-lg pr-10"
                     value={newRace.date}
                     onChange={handleInputChange}
                   />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-gray-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
                 </div>
 
                 <div className="relative">
@@ -523,29 +385,14 @@ export default function RaceManagement() {
                     value={newRace.category}
                     onChange={handleInputChange}
                   >
-                    <option value="" disabled>
-                      CATEGORY
-                    </option>
-                    {categories.map((category, index) => (
-                      <option key={index} value={category}>
-                        {category}
-                      </option>
+                    <option value="" disabled>CATEGORY</option>
+                    {categories.map((cat, idx) => (
+                      <option key={idx} value={cat}>{cat}</option>
                     ))}
                   </select>
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-gray-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
                 </div>
@@ -563,10 +410,7 @@ export default function RaceManagement() {
               </div>
 
               <div className="flex justify-end space-x-4 mt-6">
-                <button
-                  className="border border-red-600 text-red-600 px-6 py-2 rounded-full"
-                  onClick={() => setActiveModal(null)}
-                >
+                <button className="border border-red-600 text-red-600 px-6 py-2 rounded-full" onClick={() => setActiveModal(null)}>
                   CANCEL
                 </button>
                 <button

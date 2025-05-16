@@ -179,6 +179,39 @@ login: async (email, password) => {
   },
 
 
+  /**
+   * ✅ CREATE RACE: POST /races/races/
+   * @param {Object} raceData
+   * @param {string} raceData.race_name
+   * @param {string} raceData.location
+   * @param {string} raceData.date (e.g., "2025-05-16")
+   * @param {string} raceData.category
+   * @param {number} raceData.max_participants
+   */
+  createRace: async (raceData) => {
+    try {
+      const { data } = await api.post('/races/races/', raceData);
+      return data;
+    } catch (err) {
+      if (err.response?.data?.detail) {
+        throw new Error(err.response.data.detail);
+      }
+      throw new Error('Failed to create race');
+    }
+  },
+
+   getAllRaces: async () => {
+    try {
+      const { data } = await api.get('/races/races/');
+      return data;
+    } catch (err) {
+      if (err.response?.data?.detail) {
+        throw new Error(err.response.data.detail);
+      }
+      throw new Error('Failed to fetch races');
+    }
+  },
+
 
 };
 

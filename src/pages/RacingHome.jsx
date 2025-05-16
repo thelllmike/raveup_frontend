@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from "react";
 import {
   FiClock,
@@ -41,10 +42,11 @@ export default function RacingHomepage() {
       title: "Colombo Night Race",
       date: "August 20, 2025",
       location: "Colombo City Streets",
-      image: "racing-img3.png",
+      image: "./racing-img3.png",
     },
   ];
 
+  // Feature cards
   const featureCards = [
     {
       icon: "./explore-img1.png",
@@ -53,7 +55,7 @@ export default function RacingHomepage() {
         "Racers can quickly register for events, upload documents, and pay online — no paperwork, no hassle.",
     },
     {
-      icon: "explore-img2.png",
+      icon: "./explore-img2.png",
       title: "Real-Time GPS Tracking",
       description:
         "Watch racers on the move with live map updates, speed, and lap data — ideal for officials and fans alike.",
@@ -125,16 +127,8 @@ export default function RacingHomepage() {
       title: "Experience the Thrill of Sri Lanka's",
       subtitle: "Biggest Racing Event!",
       description:
-        "Track races in real time, register to compete, or explore Sri Lanka’s top circuits.",
+        "Track races in real time, register to compete, or explore Sri Lanka's top circuits.",
       image: "./racing-img1.png",
-    },
-    {
-      id: 2,
-      title: "Experience the Thrill of Sri Lanka's",
-      subtitle: "Biggest Racing Event!",
-      description:
-        "Track races in real time, register to compete, or explore Sri Lanka’s top circuits.",
-      image: "./racing-img2.png",
     },
   ];
 
@@ -276,7 +270,7 @@ export default function RacingHomepage() {
       {/* Featured Races */}
       <div className="w-full">
         <div className="py-16 bg-white">
-          <div className=" mx-auto px-4">
+          <div className="mx-auto px-4">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-3xl font-bold header-title">
                 Featured Races
@@ -382,8 +376,38 @@ export default function RacingHomepage() {
             </div>
           </div>
         </motion.section>
+
+        {/* Explore The Platform Section */}
+        <div className="px-4 md:px-8 py-16 bg-white">
+          <div className="mb-8">
+            <h2 className="header-title">
+              EXPLORE THE PLATFORM
+            </h2>
+          </div>
+
+          {/* Feature Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featureCards.map((card, index) => (
+              <div 
+                key={index}
+                className="bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center"
+              >
+                <div className="mb-4 border-2 border-red-500 rounded-lg p-2 inline-block">
+                  <img 
+                    src={card.icon} 
+                    alt={card.title}
+                    className="w-12 h-12 object-contain" 
+                  />
+                </div>
+                <h3 className="font-bold text-lg mb-2">{card.title}</h3>
+                <p className="text-gray-600 text-sm">{card.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
         
-        <div className="bg-gray-100 min-h-screen p-6 font-sans mx-auto">
+        {/* Knowledge Bank Section */}
+        <div className="bg-gray-100 p-6 font-sans mx-auto">
           {/* Header */}
           <div className="mb-8">
             <h1 className="header-title text-2xl md:text-3xl">

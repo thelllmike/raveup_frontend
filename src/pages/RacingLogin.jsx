@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import ApiService from "../ApiService";
-import { setGlobalRacerId } from "../GlobalVariable"; // Correct import
+import { setGlobalRacerId } from "../GlobalVariable";
 
 const RacingLogin = () => {
   const [formData, setFormData] = useState({
@@ -25,13 +25,21 @@ const RacingLogin = () => {
     e.preventDefault();
     setError(null);
 
+    const { email, password } = formData;
+
+    // ✅ Admin override logic
+    if (email === "admin@gmail.com" && password === "12345678") {
+      navigate("/admindashboard");
+      return;
+    }
+
     try {
-      const result = await ApiService.login(formData.email, formData.password);
+      const result = await ApiService.login(email, password);
 
       if (result && result.user_id) {
-        setGlobalRacerId(result.user_id); // ✅ Save globally
-        localStorage.setItem("access_token", result.access_token); // ✅ Optional: store token
-        navigate("/profile"); // ✅ Navigate to profile
+        setGlobalRacerId(result.user_id);
+        localStorage.setItem("access_token", result.access_token);
+        navigate("/profile");
       } else {
         setError("Login failed: No user ID returned.");
       }

@@ -1,0 +1,173 @@
+/* Google Fonts */ 
+@import url('https://fonts.googleapis.com/css2?family=Boldonse:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+/* Tailwind v4 Theme Variables */
+@theme {
+  --font-sans: 'Poppins', sans-serif;
+  --font-heading: 'Boldonse', sans-serif;
+  
+  --color-red: #E21518;
+  --color-blue: #111429;
+  --color-white: #FCFCFC;
+  --color-light-gray: #ADAEB5;
+  --color-dark-gray: #5F616F;
+  
+  --color-success: #33DB33;
+  --color-error: #EB2427;
+  --color-warning: #F4C24E;
+  
+  /* Mint Palette in OKLCH (Tailwind v4 style) */
+  --color-mint-100: oklch(0.97 0.15 145);
+  --color-mint-200: oklch(0.92 0.18 145);
+  --color-mint-300: oklch(0.85 0.22 145);
+  --color-mint-400: oklch(0.78 0.25 145);
+  --color-mint-500: oklch(0.7 0.28 145);
+  --color-mint-600: oklch(0.63 0.3 145);
+  --color-mint-700: oklch(0.56 0.32 145);
+  --color-mint-800: oklch(0.48 0.35 145);
+}
+
+/* Typography */
+body {
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+.header-title {
+  display: inline-block; /* 👈 This limits background to content width */
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-red);
+  background-color: var(--color-blue);
+  font-family: var(--font-heading);
+  padding: 10px;
+  margin: 15px 0;
+  letter-spacing: 0.7px;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--color-red);
+  color: var(--color-white);
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-back {
+  background-color: var(--color-white);
+  color: #000000;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4rem;
+  border: 1px solid var(--color-red);
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.letter-space {
+  letter-spacing: 0.50px;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* Utility Colors */
+.text-primary {
+  color: var(--color-red);
+}
+
+.bg-primary {
+  background-color: var(--color-red);
+}
+
+.text-secondary {
+  color: var(--color-blue);
+}
+
+.bg-secondary {
+  background-color: var(--color-blue);
+}
+
+/* Form */
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  border-color: var(--color-red);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-red);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-dark-gray);
+}
+
+/* Card */
+.card {
+  background-color: var(--color-white);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* Steps */
+.step-indicator {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.step-circle {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-light-gray);
+  color: #fff;
+  font-weight: bold;
+}
+
+.step-circle.active {
+  background-color: var(--color-red);
+}
+
+.step-circle.completed {
+  background-color: var(--color-success);
+}
+
+.step-line {
+  flex: 1;
+  height: 0.25rem;
+  background-color: var(--color-light-gray);
+}
+
+.step-line.active {
+  background-color: var(--color-red);
+}

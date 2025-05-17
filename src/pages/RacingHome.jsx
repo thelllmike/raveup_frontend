@@ -24,6 +24,7 @@ export default function RacingHomepage() {
 
   // replace static with fetched featured races
   const [featuredRaces, setFeaturedRaces] = useState([]);
+    const [predictions, setPredictions] = useState([]);
 
   // fallback images
   const _raceImgs = [
@@ -32,6 +33,14 @@ export default function RacingHomepage() {
     "./racing-img3.png"
   ];
 
+ 
+
+  // 2) Fetch predictions from GET /snapshots/rankings on mount
+  useEffect(() => {
+    ApiService.getPredictions()
+      .then((data) => setPredictions(data))
+      .catch((err) => console.error("Failed to load predictions:", err));
+  }, []);
   useEffect(() => {
     ApiService.getAllRaces()
       .then(data => {
@@ -379,6 +388,46 @@ export default function RacingHomepage() {
             </div>
           </div>
         </motion.section>
+
+        {/* rase prediction */}
+         <motion.section
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={fadeIn}
+      className="py-16 bg-white px-4 md:px-8"
+    >
+      <h2 className="header-title mb-6">Race Predictions</h2>
+
+      <div className="overflow-x-auto">
+        <table className="w-full bg-white rounded-lg overflow-hidden shadow-md">
+          <thead className="bg-light-gray text-white">
+            <tr>
+              <th className="py-5 px-4 text-left">DRIVER ID</th>
+              <th className="py-5 px-4 text-left">DRIVER NAME</th>
+              <th className="py-5 px-4 text-left">PREDICTED FINISH</th>
+              <th className="py-5 px-4 text-left">PREDICTED RANK</th>
+            </tr>
+          </thead>
+          <tbody>
+            {predictions.map((p, idx) => (
+              <motion.tr
+                key={p.driver_id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                className={`border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+              >
+                <td className="py-4 px-4 font-medium">{p.driver_id}</td>
+                <td className="py-4 px-4 text-dark-gray">{p.driver_name}</td>
+                <td className="py-4 px-4 text-dark-gray">{p.predicted_finish}</td>
+                <td className="py-4 px-4 text-dark-gray">{p.predicted_rank}</td>
+              </motion.tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </motion.section>
 
         {/* Explore The Platform Section */}
         <div className="px-4 md:px-8 py-16 bg-white">

@@ -212,6 +212,24 @@ login: async (email, password) => {
     }
   },
 
+    /**
+   * 🔢 GET Predictions / Rankings for all snapshots
+   * GET /snapshots/rankings
+   * @returns {Promise<Array<{ driver_id, driver_name, predicted_finish, predicted_rank }>>}
+   * @throws {Error} when the request fails
+   */
+  getPredictions: async () => {
+    try {
+      const { data } = await api.get('/snapshots/rankings');
+      return data;
+    } catch (err) {
+      if (err.response?.data?.detail) {
+        throw new Error(err.response.data.detail);
+      }
+      throw new Error('Failed to fetch predictions');
+    }
+  },
+
 
 };
 

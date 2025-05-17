@@ -17,18 +17,25 @@ const RacingProfile = () => {
           ApiService.getEmergencyContactsByRacer(racerId),
           ApiService.getLeaderboardByRacer(racerId),
           ApiService.getRegistrationsByRacer(racerId),
+           ApiService.getAllRaces(),  
         ]);
 
         const emergency = emergencyContacts[0] || {};
         const leaderboard = leaderboardData[0] || {};
         const fullName = `${racer.first_name} ${racer.last_name}`;
 
-        const formattedRegistrations = registrationsData.map((reg) => ({
+    const formattedRegistrations = registrationsData.map((reg) => ({
           name: reg.event.name,
           status: reg.status.toUpperCase().replace("_", " "),
           date: new Date(reg.event.date).toLocaleDateString(),
           location: reg.event.location,
           category: reg.event.category || "UNKNOWN",
+        }));
+
+        // map your upcoming races from the API response
+        const upcomingFromApi = allRaces.map(r => ({
+          name: r.race_name,
+          date: new Date(r.date).toLocaleDateString(),
         }));
 
         setUserData({
@@ -127,10 +134,7 @@ const RacingProfile = () => {
             <p className="text-md font-extrabold font-heading text-blue">CURRENT RANK:</p>
             <p className="font-heading text-2xl text-primary ms-4">{userData.rank}</p>
           </div>
-          <div className="mb-6 flex">
-            <p className="text-md font-extrabold font-heading text-blue">OVERALL POSITION:</p>
-            <p className="font-heading text-2xl ms-4 text-red">{userData.overall}</p>
-          </div>
+        
           <div className="mb-6 flex">
             <p className="text-md font-extrabold font-heading text-blue">TOTAL WIN:</p>
             <p className="font-heading text-2xl ms-4 text-red">{userData.totalwin}</p>
@@ -237,10 +241,7 @@ const RacingProfile = () => {
           PERFORMANCE TRACKING
         </h2>
         <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="flex bg-white text-secondary p-4 rounded-lg">
-            <p className="text-sm text-dark-gray">CURRENT RANK</p>
-            <p className="font-heading text-3xl text-primary ms-4">{userData.stats.currentRank}</p>
-          </div>
+        
           <div className="flex bg-white text-secondary p-4 rounded-lg">
             <p className="text-sm text-dark-gray">OVERALL POSITION</p>
             <p className="font-heading text-3xl ms-4">{userData.stats.overallRank}</p>

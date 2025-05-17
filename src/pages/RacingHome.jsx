@@ -11,6 +11,7 @@ import {
 import { FaTrophy, FaStar, FaArrowRight } from "react-icons/fa";
 import { BsArrowRight } from "react-icons/bs";
 import { motion } from "framer-motion";
+import ApiService from "../ApiService"; // adjust path if needed
 
 export default function RacingHomepage() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -21,30 +22,32 @@ export default function RacingHomepage() {
     seconds: 20,
   });
 
-  // Featured races
-  const featuredRaces = [
-    {
-      id: 1,
-      title: "Katukurunda Circuit Challenge",
-      date: "June 15, 2025",
-      location: "Katukurunda Racing Circuit",
-      image: "./racing-img1.png",
-    },
-    {
-      id: 2,
-      title: "Foxhill Supercross",
-      date: "July 2, 2025",
-      location: "Foxhill, Diyatalawa",
-      image: "./racing-img2.png",
-    },
-    {
-      id: 3,
-      title: "Colombo Night Race",
-      date: "August 20, 2025",
-      location: "Colombo City Streets",
-      image: "./racing-img3.png",
-    },
+  // replace static with fetched featured races
+  const [featuredRaces, setFeaturedRaces] = useState([]);
+
+  // fallback images
+  const _raceImgs = [
+    "./racing-img1.png",
+    "./racing-img2.png",
+    "./racing-img3.png"
   ];
+
+  useEffect(() => {
+    ApiService.getAllRaces()
+      .then(data => {
+        // map API response to the shape your UI expects,
+        // assign each one a random image
+        const list = data.map(r => ({
+          id: r.id,
+          title: r.race_name,
+          date: r.date,
+          location: r.location,
+          image: _raceImgs[Math.floor(Math.random() * _raceImgs.length)]
+        }));
+        setFeaturedRaces(list);
+      })
+      .catch(err => console.error("Failed to load races:", err));
+  }, []);
 
   // Feature cards
   const featureCards = [
@@ -171,7 +174,7 @@ export default function RacingHomepage() {
     },
   ];
 
-  // Auto-rotate slides
+   // Auto-rotate slides
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % bannerSlides.length);
